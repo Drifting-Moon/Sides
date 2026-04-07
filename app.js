@@ -114,15 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const originalSizeText = card.querySelector('.original-size');
         originalSizeText.textContent = formatBytes(file.size);
 
-        const removeBtn = card.querySelector('.remove-btn');
-        removeBtn.addEventListener('click', () => {
-            card.remove();
-            processedFiles.delete(id);
-            updateFooter();
-        });
-
         const downloadBtn = card.querySelector('.download-card-btn');
-        downloadBtn.addEventListener('click', () => {
+        const handleDownload = (e) => {
+            e.stopPropagation();
             const data = processedFiles.get(id);
             if (!data) return;
             const nameInput = card.querySelector('.file-name-input');
@@ -130,8 +124,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const link = document.createElement('a');
             link.href = URL.createObjectURL(data.blob);
             link.download = `${customName}.jpg`;
+            document.body.appendChild(link);
             link.click();
-        });
+            document.body.removeChild(link);
+        };
+        downloadBtn.addEventListener('click', handleDownload);
+        downloadBtn.addEventListener('touchstart', handleDownload, {passive: true});
+
+        const removeBtn = card.querySelector('.remove-btn');
+        const handleRemove = () => {
+            card.remove();
+            processedFiles.delete(id);
+            updateFooter();
+        };
+        removeBtn.addEventListener('click', handleRemove);
+        removeBtn.addEventListener('touchstart', handleRemove, {passive: true});
 
         return card;
 }
@@ -139,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function processImage(id, file, name, card) {
         const previewImg = card.querySelector('.preview-img');
         const compressedSizeText = card.querySelector('.compressed-size');
+        const savingsBadge = card.querySelector('.savings-badge');
         const statusOverlay = card.querySelector('.status-overlay');
         const targetSizeKB = parseInt(targetSizeInput.value) || 500;
         const targetSizeBytes = targetSizeKB * 1024;
@@ -176,6 +184,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const url = URL.createObjectURL(blob);
             previewImg.src = url;
             compressedSizeText.textContent = formatBytes(blob.size);
+            
+            // Calculate Savings
+            const savings = Math.round((1 - (blob.size / file.size)) * 100);
+            if (savings > 0) {
+                savingsBadge.textContent = `-${savings}%`;
+                savingsBadge.classList.remove('hidden');
+            } else {
+                savingsBadge.classList.add('hidden');
+            }
+
             statusOverlay.classList.remove('active');
 
             // Store for download

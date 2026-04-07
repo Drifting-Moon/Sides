@@ -170,9 +170,9 @@ body {
     border: none;
     color: white;
     font-family: inherit;
-    font-size: 1.1rem;
+    font-size: 1rem; /* 16px for no-zoom on mobile */
     font-weight: 600;
-    width: 80px;
+    width: 60px;
     outline: none;
 }
 
@@ -184,23 +184,23 @@ body {
 }
 
 .apply-btn {
-    background: var(--accent-gradient-start);
-    border: none;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.05);
     border-radius: 0.5rem;
     width: 32px;
     height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--bg-color);
+    color: var(--text-secondary);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .apply-btn:hover {
-    background: var(--accent-gradient-end);
+    background: rgba(255,255,255,0.15);
+    color: var(--highlight);
     transform: scale(1.05);
-    box-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
 }
 
 .apply-btn:active {
@@ -396,6 +396,20 @@ body {
 .compressed-size.highlight {
     color: var(--highlight);
     font-weight: 700;
+}
+
+.savings-badge {
+    padding: 0.2rem 0.5rem;
+    background: rgba(102, 252, 241, 0.1);
+    color: var(--highlight);
+    border-radius: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.savings-badge.hidden {
+    display: none;
 }
 
 .download-card-btn {
