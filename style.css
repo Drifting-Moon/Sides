@@ -145,15 +145,24 @@ body {
 .input-wrapper {
     display: flex;
     align-items: center;
-    background: rgba(0,0,0,0.3);
+    background: rgba(255,255,255,0.05);
     border-radius: 0.75rem;
-    padding: 0.5rem 1rem;
-    border: 1px solid rgba(255,255,255,0.05);
-    transition: border-color 0.2s;
+    padding: 0.4rem 0.5rem 0.4rem 1rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: text;
+    gap: 0.5rem;
+}
+
+.input-wrapper:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.15);
 }
 
 .input-wrapper:focus-within {
     border-color: var(--highlight);
+    background: rgba(255,255,255,0.1);
+    box-shadow: 0 0 15px rgba(102, 252, 241, 0.1);
 }
 
 .input-wrapper input {
@@ -169,8 +178,33 @@ body {
 
 .unit {
     color: var(--text-secondary);
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-right: 0.25rem;
+}
+
+.apply-btn {
+    background: var(--accent-gradient-start);
+    border: none;
+    border-radius: 0.5rem;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bg-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.apply-btn:hover {
+    background: var(--accent-gradient-end);
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
+}
+
+.apply-btn:active {
+    transform: scale(0.95);
 }
 
 .format-badge {
@@ -362,6 +396,34 @@ body {
 .compressed-size.highlight {
     color: var(--highlight);
     font-weight: 700;
+}
+
+.download-card-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 3.25rem;
+    width: 28px;
+    height: 28px;
+    background: rgba(0,0,0,0.5);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0;
+    z-index: 10;
+}
+
+.image-card:hover .download-card-btn {
+    opacity: 1;
+}
+
+.download-card-btn:hover {
+    background: var(--accent-gradient-start);
+    transform: scale(1.1);
 }
 
 .remove-btn {

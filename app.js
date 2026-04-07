@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('file-input');
     const imageGrid = document.getElementById('image-grid');
     const targetSizeInput = document.getElementById('target-size');
+    const targetSizeWrapper = document.getElementById('target-size-wrapper');
+    const applySizeBtn = document.getElementById('apply-size-btn');
     const actionsFooter = document.getElementById('actions-footer');
     const totalCompressedText = document.getElementById('total-compressed');
     const downloadAllBtn = document.getElementById('download-all');
@@ -47,14 +49,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (files.length > 0) handleFiles(files);
         });
 
-        // Target Size change
-        targetSizeInput.addEventListener('change', () => {
+        // Target Size change logic
+        const triggerProcessing = () => {
             for (const [id, data] of processedFiles) {
                 const card = data.element;
                 const file = data.originalFile;
                 const name = data.originalName;
                 processImage(id, file, name, card);
             }
+        };
+
+        targetSizeInput.addEventListener('change', triggerProcessing);
+        applySizeBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Avoid double focus
+            triggerProcessing();
+            
+            // Visual feedback
+            applySizeBtn.style.transform = 'scale(0.8)';
+            setTimeout(() => applySizeBtn.style.transform = '', 200);
+        });
+
+        // Make the whole wrapper clickable to focus input
+        targetSizeWrapper.addEventListener('click', () => {
+            targetSizeInput.focus();
         });
 
         // Clear All
@@ -104,8 +121,20 @@ document.addEventListener('DOMContentLoaded', () => {
             updateFooter();
         });
 
+        const downloadBtn = card.querySelector('.download-card-btn');
+        downloadBtn.addEventListener('click', () => {
+            const data = processedFiles.get(id);
+            if (!data) return;
+            const nameInput = card.querySelector('.file-name-input');
+            const customName = nameInput.value || data.originalName;
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(data.blob);
+            link.download = `${customName}.jpg`;
+            link.click();
+        });
+
         return card;
-    }
+}
 
     async function processImage(id, file, name, card) {
         const previewImg = card.querySelector('.preview-img');
