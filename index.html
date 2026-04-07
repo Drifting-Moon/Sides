@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squeeze – Premium Image Compressor</title>
+    <meta name="description" content="A powerful, private, browser-based image compressor. Compress and convert images to JPEG with precise size control.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-blobs"></div>
+    <main class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="40" height="40" rx="12" fill="var(--accent-gradient-start)" />
+                    <path d="M12 28L18 22L22 26L28 20" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="14" cy="14" r="3" fill="white" />
+                </svg>
+                <h1>Squeeze</h1>
+            </div>
+            <p class="subtitle">Fast, secure, and professional image compression.</p>
+        </header>
+
+        <section class="controls-panel card">
+            <div class="control-group">
+                <label for="target-size">Target Size (KB)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="target-size" placeholder="500" value="500">
+                    <span class="unit">KB</span>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Format</label>
+                <div class="format-badge">JPEG</div>
+            </div>
+        </section>
+
+        <section id="drop-zone" class="upload-zone">
+            <div class="upload-content">
+                <div class="icon-circle">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <h3>Drop images here</h3>
+                <p>or click to upload from your device</p>
+            </div>
+            <input type="file" id="file-input" multiple accept="image/*" class="hidden">
+        </section>
+
+        <section id="image-grid" class="image-grid"></section>
+
+        <footer id="actions-footer" class="actions-footer hidden">
+            <div class="stats-summar">
+                <span id="total-compressed">0 images ready</span>
+            </div>
+            <div class="action-buttons">
+                <button id="clear-all" class="btn btn-secondary">Clear All</button>
+                <button id="download-all" class="btn btn-primary">Download All (.zip)</button>
+            </div>
+        </footer>
+    </main>
+
+    <template id="image-card-template">
+        <div class="image-card card animate-in">
+            <div class="preview-container">
+                <img src="" alt="Preview" class="preview-img">
+                <div class="status-overlay">
+                    <div class="loader"></div>
+                </div>
+            </div>
+            <div class="image-info">
+                <div class="name-edit-group">
+                    <input type="text" class="file-name-input" placeholder="Filename">
+                    <span class="extension">.jpg</span>
+                </div>
+                <div class="size-info">
+                    <span class="original-size">--- KB</span>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 6H10M10 6L7 3M10 6L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="compressed-size highlight">--- KB</span>
+                </div>
+            </div>
+            <button class="remove-btn" title="Remove image">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+    </template>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

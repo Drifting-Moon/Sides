@@ -1,0 +1,12 @@
+{
+  "name": "squeeze-image-compressor",
+  "version": "1.0.0",
+  "description": "Premium image compressor",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "vite": "latest"
+  }
+}

@@ -1,0 +1,209 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const imageGrid = document.getElementById('image-grid');
+    const targetSizeInput = document.getElementById('target-size');
+    const actionsFooter = document.getElementById('actions-footer');
+    const totalCompressedText = document.getElementById('total-compressed');
+    const downloadAllBtn = document.getElementById('download-all');
+    const clearAllBtn = document.getElementById('clear-all');
+    const imageCardTemplate = document.getElementById('image-card-template');
+
+    let processedFiles = new Map(); // id -> file data
+
+    // Initialize
+    initEvents();
+
+    function initEvents() {
+        // Drag and Drop
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragging');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragging');
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            handleFiles(files);
+        });
+
+        // File Input
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+            handleFiles(files);
+        });
+
+        // Paste support
+        window.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            const files = [];
+            for (let item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    files.push(item.getAsFile());
+                }
+            }
+            if (files.length > 0) handleFiles(files);
+        });
+
+        // Target Size change
+        targetSizeInput.addEventListener('change', () => {
+            for (const [id, data] of processedFiles) {
+                const card = data.element;
+                const file = data.originalFile;
+                const name = data.originalName;
+                processImage(id, file, name, card);
+            }
+        });
+
+        // Clear All
+        clearAllBtn.addEventListener('click', () => {
+            imageGrid.innerHTML = '';
+            processedFiles.clear();
+            updateFooter();
+        });
+
+        // Download All
+        downloadAllBtn.addEventListener('click', downloadAll);
+    }
+
+    async function handleFiles(files) {
+        if (files.length === 0) return;
+        
+        actionsFooter.classList.remove('hidden');
+
+        for (const file of files) {
+            const id = Math.random().toString(36).substr(2, 9);
+            const originalName = file.name.split('.').slice(0, -1).join('.') || 'image';
+            
+            // Create Card UI
+            const card = createImageCard(id, file, originalName);
+            imageGrid.appendChild(card);
+            
+            // Process Image
+            processImage(id, file, originalName, card);
+        }
+    }
+
+    function createImageCard(id, file, originalName) {
+        const clone = imageCardTemplate.content.cloneNode(true);
+        const card = clone.querySelector('.image-card');
+        card.dataset.id = id;
+
+        const nameInput = card.querySelector('.file-name-input');
+        nameInput.value = originalName;
+
+        const originalSizeText = card.querySelector('.original-size');
+        originalSizeText.textContent = formatBytes(file.size);
+
+        const removeBtn = card.querySelector('.remove-btn');
+        removeBtn.addEventListener('click', () => {
+            card.remove();
+            processedFiles.delete(id);
+            updateFooter();
+        });
+
+        return card;
+    }
+
+    async function processImage(id, file, name, card) {
+        const previewImg = card.querySelector('.preview-img');
+        const compressedSizeText = card.querySelector('.compressed-size');
+        const statusOverlay = card.querySelector('.status-overlay');
+        const targetSizeKB = parseInt(targetSizeInput.value) || 500;
+        const targetSizeBytes = targetSizeKB * 1024;
+
+        statusOverlay.classList.add('active');
+
+        try {
+            const bitmap = await createImageBitmap(file);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = bitmap.width;
+            canvas.height = bitmap.height;
+            ctx.drawImage(bitmap, 0, 0);
+
+            // Binary search or iterative approach for target size
+            let quality = 0.95;
+            let blob = await getBlob(canvas, quality);
+            
+            if (blob.size > targetSizeBytes) {
+                // Quick iterative step-down if significantly larger
+                let min = 0.05, max = 0.95;
+                for (let i = 0; i < 7; i++) { // 7 steps of binary search is fine
+                    quality = (min + max) / 2;
+                    blob = await getBlob(canvas, quality);
+                    if (blob.size > targetSizeBytes) {
+                        max = quality;
+                    } else {
+                        min = quality;
+                    }
+                }
+            }
+
+            // Update UI
+            const url = URL.createObjectURL(blob);
+            previewImg.src = url;
+            compressedSizeText.textContent = formatBytes(blob.size);
+            statusOverlay.classList.remove('active');
+
+            // Store for download
+            processedFiles.set(id, {
+                blob,
+                originalFile: file,
+                originalName: name,
+                element: card
+            });
+
+            updateFooter();
+        } catch (err) {
+            console.error('Processing error:', err);
+            statusOverlay.innerHTML = '<span style="color:var(--danger)">Error</span>';
+        }
+    }
+
+    function getBlob(canvas, quality) {
+        return new Promise(resolve => {
+            canvas.toBlob(resolve, 'image/jpeg', quality);
+        });
+    }
+
+    function formatBytes(bytes, decimals = 1) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function updateFooter() {
+        const count = processedFiles.size;
+        totalCompressedText.textContent = `${count} image${count === 1 ? '' : 's'} compressed`;
+        if (count === 0) {
+            actionsFooter.classList.add('hidden');
+        } else {
+            actionsFooter.classList.remove('hidden');
+        }
+    }
+
+    async function downloadAll() {
+        if (processedFiles.size === 0) return;
+
+        const zip = new JSZip();
+        
+        for (const [id, data] of processedFiles) {
+            const nameInput = data.element.querySelector('.file-name-input');
+            const customName = nameInput.value || data.originalName;
+            zip.file(`${customName}.jpg`, data.blob);
+        }
+
+        const content = await zip.generateAsync({type: "blob"});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = "compressed_images.zip";
+        link.click();
+    }
+});
