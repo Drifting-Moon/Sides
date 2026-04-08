@@ -60,8 +60,12 @@
                 <span id="total-compressed">0 images ready</span>
             </div>
             <div class="action-buttons">
+                <div class="zip-name-group">
+                    <input type="text" id="batch-name-input" placeholder="compressed_images" value="compressed_images">
+                </div>
                 <button id="clear-all" class="btn btn-secondary">Clear All</button>
-                <button id="download-all" class="btn btn-primary">Download All (.zip)</button>
+                <button id="download-zip" class="btn btn-primary">Download (Zip)</button>
+                <button id="download-pdf" class="btn btn-primary" style="background: linear-gradient(135deg, #ff4b5c, #ff9068);">Download (PDF)</button>
             </div>
         </footer>
     </main>
@@ -98,6 +102,7 @@
     </template>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

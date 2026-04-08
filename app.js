@@ -4,10 +4,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const imageGrid = document.getElementById('image-grid');
     const targetSizeInput = document.getElementById('target-size');
     const targetSizeWrapper = document.getElementById('target-size-wrapper');
+    const batchNameInput = document.getElementById('batch-name-input');
     const applySizeBtn = document.getElementById('apply-size-btn');
     const actionsFooter = document.getElementById('actions-footer');
     const totalCompressedText = document.getElementById('total-compressed');
-    const downloadAllBtn = document.getElementById('download-all');
+    const downloadZipBtn = document.getElementById('download-zip');
+    const downloadPdfBtn = document.getElementById('download-pdf');
     const clearAllBtn = document.getElementById('clear-all');
     const imageCardTemplate = document.getElementById('image-card-template');
 
@@ -81,8 +83,9 @@ document.addEventListener('DOMContentLoaded', () => {
             updateFooter();
         });
 
-        // Download All
-        downloadAllBtn.addEventListener('click', downloadAll);
+        // Download Actions
+        downloadZipBtn.addEventListener('click', downloadZip);
+        downloadPdfBtn.addEventListener('click', downloadPdf);
     }
 
     async function handleFiles(files) {
@@ -129,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.removeChild(link);
         };
         downloadBtn.addEventListener('click', handleDownload);
-        downloadBtn.addEventListener('touchstart', handleDownload, {passive: true});
 
         const removeBtn = card.querySelector('.remove-btn');
         const handleRemove = () => {
@@ -138,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
             updateFooter();
         };
         removeBtn.addEventListener('click', handleRemove);
-        removeBtn.addEventListener('touchstart', handleRemove, {passive: true});
 
         return card;
 }
@@ -161,6 +162,12 @@ document.addEventListener('DOMContentLoaded', () => {
             canvas.width = bitmap.width;
             canvas.height = bitmap.height;
             ctx.drawImage(bitmap, 0, 0);
+
+            const extensionText = card.querySelector('.extension');
+            extensionText.textContent = '.jpg';
+            
+            const downloadBtn = card.querySelector('.download-card-btn');
+            downloadBtn.title = 'Download JPEG';
 
             // Binary search or iterative approach for target size
             let quality = 0.95;
@@ -217,6 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+
+
     function formatBytes(bytes, decimals = 1) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -236,10 +245,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function downloadAll() {
+    async function downloadZip() {
         if (processedFiles.size === 0) return;
 
         const zip = new JSZip();
+        const batchName = document.getElementById('batch-name-input').value.trim() || 'compressed_images';
         
         for (const [id, data] of processedFiles) {
             const nameInput = data.element.querySelector('.file-name-input');
@@ -250,7 +260,65 @@ document.addEventListener('DOMContentLoaded', () => {
         const content = await zip.generateAsync({type: "blob"});
         const link = document.createElement('a');
         link.href = URL.createObjectURL(content);
-        link.download = "compressed_images.zip";
+        link.download = `${batchName}.zip`;
         link.click();
+    }
+
+    async function downloadPdf() {
+        if (processedFiles.size === 0) return;
+        
+        const batchName = document.getElementById('batch-name-input').value.trim() || 'compressed_images';
+        
+        const pdf = new window.jspdf.jsPDF({
+            orientation: 'p',
+            unit: 'px',
+            format: 'a4'
+        });
+        
+        let isFirstPage = true;
+        let pageNum = 1;
+        
+        for (const [id, data] of processedFiles) {
+            if (!isFirstPage) {
+                pdf.addPage();
+            }
+            
+            const base64Data = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(data.blob);
+            });
+            
+            const img = new Image();
+            img.src = base64Data;
+            await new Promise(resolve => img.onload = resolve);
+            
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            
+            // Add padding
+            const padding = 20;
+            const pWidth = pageWidth - (padding * 2);
+            const pHeight = pageHeight - (padding * 2) - 20; // extra space for page number
+            
+            const ratio = Math.min(pWidth / img.width, pHeight / img.height);
+            const targetWidth = img.width * ratio;
+            const targetHeight = img.height * ratio;
+            
+            const x = (pageWidth - targetWidth) / 2;
+            const y = padding + (pHeight - targetHeight) / 2;
+            
+            pdf.addImage(base64Data, 'JPEG', x, y, targetWidth, targetHeight);
+            
+            // Add page number (e.g. "1")
+            pdf.setFontSize(10);
+            pdf.setTextColor(100);
+            pdf.text(String(pageNum), pageWidth / 2, pageHeight - 15, { align: 'center' });
+            
+            isFirstPage = false;
+            pageNum++;
+        }
+        
+        pdf.save(`${batchName}.pdf`);
     }
 });

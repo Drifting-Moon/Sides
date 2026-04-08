@@ -207,13 +207,37 @@ body {
     transform: scale(0.95);
 }
 
-.format-badge {
-    padding: 0.6rem 1.25rem;
+.format-select {
     background: rgba(255,255,255,0.1);
     color: white;
+    border: 1px solid rgba(255,255,255,0.05);
     border-radius: 0.75rem;
-    font-weight: 600;
+    padding: 0.6rem 2rem 0.6rem 1.25rem;
+    font-family: inherit;
     font-size: 0.9rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    /* Custom simple arrow for select */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1em;
+}
+
+.format-select:hover {
+    background-color: rgba(255,255,255,0.15);
+}
+
+.format-select:focus {
+    border-color: var(--highlight);
+    box-shadow: 0 0 15px rgba(102, 252, 241, 0.1);
+}
+
+.format-select option {
+    background: var(--bg-color);
+    color: white;
 }
 
 /* Upload Zone */
@@ -524,6 +548,32 @@ body {
 .action-buttons {
     display: flex;
     gap: 1rem;
+    align-items: center;
+}
+
+.zip-name-group {
+    display: flex;
+    align-items: center;
+    background: rgba(0,0,0,0.2);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.zip-name-group input {
+    background: none;
+    border: none;
+    color: white;
+    font-family: inherit;
+    font-size: 0.9rem;
+    width: 140px;
+    outline: none;
+}
+
+.zip-name-group span {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 /* Responsive */
