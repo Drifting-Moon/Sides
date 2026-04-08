@@ -72,8 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Make the whole wrapper clickable to focus input
-        targetSizeWrapper.addEventListener('click', () => {
-            targetSizeInput.focus();
+        targetSizeWrapper.addEventListener('click', (e) => {
+            if (e.target !== targetSizeInput) {
+                targetSizeInput.focus();
+                // Move cursor to end only if clicking the wrapper area
+                const val = targetSizeInput.value;
+                targetSizeInput.value = '';
+                targetSizeInput.value = val;
+            }
+        });
+
+        // Prevent input click from triggering wrapper logic
+        targetSizeInput.addEventListener('click', (e) => {
+            e.stopPropagation();
         });
 
         // Clear All
@@ -104,6 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Process Image
             processImage(id, file, originalName, card);
         }
+        
+        updateNumbering();
     }
 
     function createImageCard(id, file, originalName) {
@@ -137,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const handleRemove = () => {
             card.remove();
             processedFiles.delete(id);
+            updateNumbering();
             updateFooter();
         };
         removeBtn.addEventListener('click', handleRemove);
@@ -235,6 +249,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     }
 
+    function updateNumbering() {
+        const cards = imageGrid.querySelectorAll('.image-card');
+        cards.forEach((card, index) => {
+            const badge = card.querySelector('.card-number-badge');
+            if (badge) badge.textContent = index + 1;
+        });
+    }
+
     function updateFooter() {
         const count = processedFiles.size;
         totalCompressedText.textContent = `${count} image${count === 1 ? '' : 's'} compressed`;
@@ -251,8 +273,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const zip = new JSZip();
         const batchName = document.getElementById('batch-name-input').value.trim() || 'compressed_images';
         
-        for (const [id, data] of processedFiles) {
-            const nameInput = data.element.querySelector('.file-name-input');
+        const cards = imageGrid.querySelectorAll('.image-card');
+        for (const card of cards) {
+            const id = card.dataset.id;
+            const data = processedFiles.get(id);
+            if (!data) continue;
+            
+            const nameInput = card.querySelector('.file-name-input');
             const customName = nameInput.value || data.originalName;
             zip.file(`${customName}.jpg`, data.blob);
         }
@@ -269,19 +296,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const batchName = document.getElementById('batch-name-input').value.trim() || 'compressed_images';
         
-        const pdf = new window.jspdf.jsPDF({
-            orientation: 'p',
-            unit: 'px',
-            format: 'a4'
-        });
-        
+        let pdf;
         let isFirstPage = true;
-        let pageNum = 1;
         
-        for (const [id, data] of processedFiles) {
-            if (!isFirstPage) {
-                pdf.addPage();
-            }
+        const cards = imageGrid.querySelectorAll('.image-card');
+        for (const card of cards) {
+            const id = card.dataset.id;
+            const data = processedFiles.get(id);
+            if (!data) continue;
             
             const base64Data = await new Promise((resolve) => {
                 const reader = new FileReader();
@@ -293,32 +315,25 @@ document.addEventListener('DOMContentLoaded', () => {
             img.src = base64Data;
             await new Promise(resolve => img.onload = resolve);
             
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const pageHeight = pdf.internal.pageSize.getHeight();
+            const formatArr = [img.width, img.height];
+            const orientation = img.width > img.height ? 'l' : 'p';
             
-            // Add padding
-            const padding = 20;
-            const pWidth = pageWidth - (padding * 2);
-            const pHeight = pageHeight - (padding * 2) - 20; // extra space for page number
-            
-            const ratio = Math.min(pWidth / img.width, pHeight / img.height);
-            const targetWidth = img.width * ratio;
-            const targetHeight = img.height * ratio;
-            
-            const x = (pageWidth - targetWidth) / 2;
-            const y = padding + (pHeight - targetHeight) / 2;
-            
-            pdf.addImage(base64Data, 'JPEG', x, y, targetWidth, targetHeight);
-            
-            // Add page number (e.g. "1")
-            pdf.setFontSize(10);
-            pdf.setTextColor(100);
-            pdf.text(String(pageNum), pageWidth / 2, pageHeight - 15, { align: 'center' });
-            
-            isFirstPage = false;
-            pageNum++;
+            if (isFirstPage) {
+                pdf = new window.jspdf.jsPDF({
+                    orientation: orientation,
+                    unit: 'px',
+                    format: formatArr
+                });
+                pdf.addImage(base64Data, 'JPEG', 0, 0, img.width, img.height);
+                isFirstPage = false;
+            } else {
+                pdf.addPage(formatArr, orientation);
+                pdf.addImage(base64Data, 'JPEG', 0, 0, img.width, img.height);
+            }
         }
         
-        pdf.save(`${batchName}.pdf`);
+        if (pdf) {
+            pdf.save(`${batchName}.pdf`);
+        }
     }
 });
